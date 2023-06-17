@@ -24,6 +24,9 @@ python manage.py runserver
 
 The server will be running on http://127.0.0.1:8000/
 
+Username : admin 
+Password : admin
+
 # Features
 
 User-friendly Interface: The application provides a clean and intuitive user interface for easy navigation and interaction with blog posts.
