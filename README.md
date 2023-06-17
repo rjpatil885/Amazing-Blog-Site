@@ -24,7 +24,7 @@ python manage.py runserver
 
 The server will be running on http://127.0.0.1:8000/
 
-Username : admin 
+Username : admin,
 Password : admin
 
 # Features
