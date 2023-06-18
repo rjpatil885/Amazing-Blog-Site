@@ -223,13 +223,17 @@ def update_profile(request):
 
 @login_required
 def myaccount(request):
+   
     try:
-        user_profile = UserProfile.objects.get(user=request.user)
+        if request.user.is_superuser:
+            print('yes')
+            user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+        else:
+            user_profile = UserProfile.objects.get(user=request.user)
+
     except UserProfile.DoesNotExist:
         user_profile = None
-
     return render(request, 'registration/profile.html', {'user_profile': user_profile})
-
 
 @method_decorator(login_required, name='dispatch')
 class PostListView(ListView):

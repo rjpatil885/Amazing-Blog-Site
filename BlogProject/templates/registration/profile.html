@@ -4,16 +4,13 @@
 
 <style>
  
- .profile-picture {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
+.profile-picture {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+  }
 
-/* Custom CSS for Dashboard Sidebar */
-
-/* Sidebar Container */
 .sidebar {
   width: 250px;
   background-color: #f8f9fa;
@@ -32,7 +29,6 @@
   }
 }
 
-/* Sidebar Menu Items */
 .sidebar .nav-link {
   color: #212529;
   font-weight: bold;
@@ -46,13 +42,11 @@
   background-color: #e9ecef;
 }
 
-/* Active Menu Item */
 .sidebar .nav-item.active .nav-link {
   background-color: #007bff;
   color: #fff;
 }
 
-/* Main Content Area */
 .content {
   margin-left: 250px;
   padding: 20px;
@@ -64,7 +58,6 @@
   }
 }
 
-/* Additional Styles for a Nice and Attractive Dashboard */
 .sidebar {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
@@ -122,12 +115,12 @@
 }
 
 .user-details {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
      
     
 
@@ -326,13 +319,14 @@
   {% endif %}
 
  {% if user_profile %}
-
   <div class="container myprofile mt-4 mb-3">
     <div class="user-details">
       <div class="d-flex justify-content-between my-2 py-0 pb-0">
         <div>
           <h5>
-        <img src="{{ user_profile.profile_picture.url }}" alt="" class="img-fluid profile-picture mx-3">
+            {% if user_profile.profile_picture %}
+            <img src="{{ user_profile.profile_picture.url }}" alt="" class="img-fluid profile-picture mx-3">
+            {% endif %}
         {{ user_profile.user.username }}
       </h5>
       </div>
