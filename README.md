@@ -12,7 +12,7 @@ Clone the repository to your local machine:
 https://github.com/rjpatil885/Blog_Site.git
 
 Navigate to the project directory:
-cd Amazing-Blog-Site
+cd Amazing-Blog-Site/BlogProject
 
 Apply the migrations:
 python manage.py makemigrations,
@@ -23,6 +23,9 @@ Run the following command to start the development server:
 python manage.py runserver
 
 The server will be running on http://127.0.0.1:8000/
+
+Username : admin,
+Password : admin
 
 # Features
 
