@@ -4,7 +4,12 @@
 
 <style>
  
-
+ .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
 
 /* Custom CSS for Dashboard Sidebar */
 
@@ -210,7 +215,7 @@
                 {% endif %}
                 <div class=" show  " id="update-form">
                 
-                  <form method="post" action="{% url 'update_profile' %}" novalidate>
+                  <form method="post" action="{% url 'update_profile' %}" novalidate enctype=multipart/form-data>
                     {% csrf_token %}
 
                     <div class="mb-3">
@@ -236,6 +241,21 @@
                         </div>
                       {% endif %}
                     </div>
+
+                    <div class="mb-3">
+                      <label for="{{ profile_form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
+                      {{ profile_form.profile_picture }}
+                      {% if profile_form.profile_picture.errors %}
+                          <div class="text-danger py-2">
+                              {% for error in profile_form.profile_picture.errors %}
+                                  <span>{{ error }}</span>
+                              {% endfor %}
+                          </div>
+                      {% endif %}
+
+                  </div>
+                  
+
                     <div class="mb-3">
                       <label for="{{ update_form.first_name.id_for_label }}" class="form-label">First Name</label>
                       {{ update_form.first_name }}
@@ -259,6 +279,34 @@
                         </div>
                       {% endif %}
                     </div>
+
+
+                    <div class="mb-3">
+                      <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Bio</label>
+                      {{ profile_form.bio }}
+                      {% if profile_form.bio.errors %}
+                        <div class="text-danger  py-2">
+                          {% for error in profile_form.bio.errors %}
+                            <span>{{ error }}</span>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+
+                    
+
+                    <div class="mb-3">
+                      <label for="{{ profile_form.social_media_links.id_for_label }}" class="form-label">Social Media Links</label>
+                      {{ profile_form.social_media_links }}
+                      {% if profile_form.social_media_links.errors %}
+                        <div class="text-danger  py-2">
+                          {% for error in profile_form.social_media_links.errors %}
+                            <span>{{ error }}</span>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+
                     <div class="text-center ">
                       <button type="submit" class="btn btn-primary  my-4 ">Update</button>
                     </div>
@@ -282,15 +330,24 @@
   <div class="container myprofile mt-4 mb-3">
     <div class="user-details">
       <div class="d-flex justify-content-between my-2 py-0 pb-0">
-        <h5 > <i class="fas fa-user"></i> My Profile        
-        </h5>
+        <div>
+          <h5>
+        <img src="{{ user_profile.profile_picture.url }}" alt="" class="img-fluid profile-picture mx-3">
+        {{ user_profile.user.username }}
+      </h5>
+      </div>
+      <div>
         <a href="{% url 'update_profile' %}" class="btn btn-primary "> <i class="fas fa-pen "></i></a>
       </div>
+    </div>
 
-        <p class="py-4"><strong>Username:</strong> {{ user_profile.username }}</p>
-        <p class="py-4"><strong>Email:</strong> {{ user_profile.email }}</p>
-        <p class="py-4"><strong>First Name:</strong> {{ user_profile.first_name }}</p>
-        <p class="py-4"><strong>Last Name:</strong> {{ user_profile.last_name }}</p>
+        <p class="py-4"><strong>Username:</strong> {{ user_profile.user.username }}</p>
+        <p class="py-4"><strong>Email:</strong> {{ user_profile.user.email }}</p>
+        <p class="py-4"><strong>First Name:</strong> {{ user_profile.user.first_name }}</p>
+        <p class="py-4"><strong>Last Name:</strong> {{ user_profile.user.last_name }}</p>
+        <p class="py-4"><strong>Bio:</strong> {{ user_profile.bio }}</p>
+        <p class="py-4"><strong>Social Links:</strong> {{ user_profile.social_media_links }}</p>
+
     </div>
   </div>
   {% endif %}

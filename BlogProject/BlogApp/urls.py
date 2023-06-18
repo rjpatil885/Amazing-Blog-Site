@@ -32,12 +32,10 @@ urlpatterns = [
   path('post/<slug:slug>/delete/', delete_post , name='post_delete'),
   path('category/<slug:slug>/delete/', delete_category , name='category_delete'),
 
-#     path('posts/', PostListView.as_view(), name='post_list'),
-
-
 ]
 
 # Serving static and media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

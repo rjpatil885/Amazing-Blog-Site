@@ -83,3 +83,10 @@ class NewsletterSubscription(models.Model):
 
   def __str__(self):
     return self.email
+
+
+class View(models.Model):
+  user = models.ForeignKey(User, on_delete=models.PROTECT)
+  post = models.ForeignKey(Post, on_delete=models.SET_NULL, null=True)
+  viewed_at = models.DateTimeField(auto_now_add=True)
+

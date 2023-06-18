@@ -8,13 +8,18 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.views import LoginView, LogoutView
 from django.views.generic import DetailView, ListView
-from .models import Post, Comment, Like, Category
+from .models import Post, Comment, Like, Category, View, UserProfile
 from .forms import CommentForm, LoginForm, SignupForm, UserProfileForm, ContactForm
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from django.contrib import messages
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.decorators import method_decorator
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+import random
+
 
 
 def home(request):
@@ -22,7 +27,7 @@ def home(request):
         posts = Post.objects.all().order_by('-date_posted')[:4]
         featured_post  = Post.objects.all().order_by('view_count')[:3]
         category = Category.objects.all()
-        recomend = get_user_recommendations(request.user.id, 3)
+        recomend = get_user_recommendations(request.user.id, 5)
         context = {
             'posts': posts,
             'category': category,
@@ -63,6 +68,9 @@ def detailed_blog(request, slug):
     detailed_blog.save()
     category = Category.objects.all()
     comments = detailed_blog.comments.filter(active=True).order_by('-date_posted')
+
+    if request.user.is_authenticated:
+        View.objects.create(user=request.user, post=detailed_blog, viewed_at=timezone.now())
 
     is_liked = False
     is_disliked = False
@@ -125,7 +133,7 @@ def like_view(request):
 
     return JsonResponse({'success': False})
 
-
+@login_required
 def dislike_view(request):
     if request.method == 'GET':
         try:
@@ -178,42 +186,52 @@ class RegistrationView(CreateView):
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('login')
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        user_profile = UserProfile.objects.create(user=self.object)
+
+        return response
+
     def dispatch(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
             return redirect('profile')
         return super().dispatch(request, *args, **kwargs)
 
-
+@login_required
 def profile(request):
     return render(request, 'registration/profile.html',{'in_profile':True})
-
 
 @login_required
 def update_profile(request):
     if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
+        user_form = UserProfileForm(request.POST, instance=request.user)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=request.user.userprofile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
             messages.success(request, 'Your profile has been updated successfully.')
             return redirect('myaccount')
         else:
             messages.error(request, 'Error updating your profile. Please correct the errors below.')
     else:
-        form = UserProfileForm(instance=request.user)
+        user_form = UserProfileForm(instance=request.user)
+        profile_form = UserProfileForm(instance=request.user.userprofile)
 
-    return render(request, 'registration/profile.html', {'update_form': form})
-
+    return render(request, 'registration/profile.html', {'update_form': user_form, 'profile_form': profile_form})
 
 @login_required
 def myaccount(request):
     try:
-        user_profile = User.objects.get(id=request.user.id)
-    except User.DoesNotExist:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
         user_profile = None
 
     return render(request, 'registration/profile.html', {'user_profile': user_profile})
 
 
+@method_decorator(login_required, name='dispatch')
 class PostListView(ListView):
     model = Post
     template_name = 'registration/profile.html'
@@ -226,7 +244,7 @@ class PostListView(ListView):
             context['post_empty'] = True
         return context
 
-
+@method_decorator(login_required, name='dispatch')
 class PostDetailView(DetailView):
     model = Post
     template_name = 'registration/profile.html'
@@ -234,7 +252,7 @@ class PostDetailView(DetailView):
     slug_url_kwarg = 'slug'
     context_object_name = 'post'
 
-
+@method_decorator(login_required, name='dispatch')
 class CategoryListView(ListView):
     model = Category
     template_name = 'registration/profile.html'
@@ -246,9 +264,7 @@ class CategoryListView(ListView):
             context['category_empty'] = True
         return context
     
-
-from django.core.exceptions import ValidationError
-
+@method_decorator(login_required, name='dispatch')
 class PostCreateView(CreateView):
     model = Post
     fields = ['title', 'content', 'categories', 'featured_image']
@@ -284,7 +300,7 @@ class PostCreateView(CreateView):
         return context
         
 
-
+@method_decorator(login_required, name='dispatch')
 class PostUpdateView(UpdateView):
     model = Post
     fields = ['title', 'content', 'categories', 'featured_image']
@@ -315,6 +331,7 @@ class PostUpdateView(UpdateView):
         messages.info(self.request, 'Your Post has been successfully updated.')
         return super().form_valid(form)
 
+@login_required
 def delete_post(request, slug):
 
     main_post = get_object_or_404(Post, slug = slug)
@@ -325,7 +342,7 @@ def delete_post(request, slug):
 
     return redirect('post-list')
 
-
+@login_required
 def delete_category(request, slug):
 
     main_category = get_object_or_404(Category, slug = slug)
@@ -336,6 +353,7 @@ def delete_category(request, slug):
 
     return redirect('category-list')
 
+@method_decorator(login_required, name='dispatch')
 class CategoryCreateView(CreateView):
     model = Category
     fields = ['name']
@@ -361,7 +379,7 @@ class CategoryCreateView(CreateView):
         context['category_create_form'] = form
         return context
 
-
+@method_decorator(login_required, name='dispatch')
 class CategoryUpdateView(UpdateView):
     model = Category
     fields = ['name']
@@ -385,7 +403,7 @@ class CategoryUpdateView(UpdateView):
         context['category_update_form'] = form
         return context
 
-
+@method_decorator(login_required, name='dispatch')
 class CategoryDeleteView(DeleteView):
     model = Category
     template_name = 'category_delete.html'
@@ -399,7 +417,10 @@ def terms_condition(request):
 
 
 def get_user_recommendations(user_id, num_recommendations=5):
-    liked_posts = Like.objects.filter(user_id=user_id).values_list('post_id', flat=True)
+    liked_posts = set(Like.objects.filter(user_id=user_id).values_list('post_id', flat=True))
+    viewed_posts = set(View.objects.filter(user_id=user_id).values_list('post_id', flat=True))
+    commented_posts = set(Comment.objects.filter(author_id=user_id).values_list('post_id', flat=True))
+
     posts = Post.objects.all()
     post_titles = [post.title for post in posts]
     post_content = [post.content for post in posts]
@@ -410,22 +431,23 @@ def get_user_recommendations(user_id, num_recommendations=5):
 
     similarity_scores = {}
 
-    for post_id in liked_posts:
+    for post_id in liked_posts | viewed_posts | commented_posts:
         post_index = post_titles.index(Post.objects.get(id=post_id).title)
         scores = list(enumerate(cosine_similarities[post_index]))
-        
+
         for index, score in scores:
             if index != post_index:
                 if index in similarity_scores:
                     similarity_scores[index] += score
                 else:
                     similarity_scores[index] = score
-   
+
     sorted_scores = sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)
-    top_n_posts = [posts[index] for index, _ in sorted_scores[:num_recommendations]]
+    random.shuffle(sorted_scores) 
+    sorted_posts = [posts[index] for index, _ in sorted_scores]
+    top_n_posts = sorted_posts[:num_recommendations]
 
     return top_n_posts
-
 
 class CustomLogoutView(LogoutView):
     next_page = reverse_lazy('login')
